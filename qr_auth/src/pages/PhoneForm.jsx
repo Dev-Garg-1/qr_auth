@@ -4,18 +4,21 @@ import axios from "axios";
 
 const PhoneForm = ({ onUpload, onBack }) => {
   const [serialNumber, setSerialNumber] = useState("");
+  const [hashedSerial, setHashedSerial] = useState("");
   // const [date, setDate] = useState("");
   const [phoneName, setPhoneName] = useState("");
   const [txHash, setTxHash] = useState("");
   const [success, setSuccess] = useState();
   const [url, setUrl] = useState("");
+  const [newurl, setnewUrl] = useState("");
+  const [to, setTo] = useState("");
 
   const uploadJSONToIPFS = async (serialNumber, phoneName) => {
     setSuccess(false);
 
     try {
       const response = await axios.post("http://localhost:3500/api/mint", {
-        serialNumber,
+        serialNumber: hashedSerial,
         tokenURI: phoneName,
       });
 
@@ -56,7 +59,7 @@ const PhoneForm = ({ onUpload, onBack }) => {
   const handleSubmit = async () => {
     const uploadedCid = await uploadJSONToIPFS(serialNumber, phoneName);
     if (!uploadedCid) {
-      alert("Failed to upload JSON to IPFS");
+      alert("Successfully uploaded");
       return;
     }
 
@@ -71,6 +74,25 @@ const PhoneForm = ({ onUpload, onBack }) => {
     }
   };
 
+  async function handleTransaction() {
+    const response = await axios.post("http://localhost:3500/api/transfer", {
+      to,
+      serialNumber: hashedSerial,
+    });
+
+    console.log(response.data);
+    setnewUrl(response.data.transactionHash);
+  }
+
+  function textToAscii(text) {
+    const val = text
+      .split("")
+      .map((char) => char.charCodeAt(0))
+      .join("");
+    setHashedSerial(val);
+    console.log(val);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
       <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
@@ -79,19 +101,15 @@ const PhoneForm = ({ onUpload, onBack }) => {
         </h1>
 
         <input
-          type="number"
+          type="text"
           placeholder="Serial Number"
           value={serialNumber}
-          onChange={(e) => setSerialNumber(e.target.value)}
+          onChange={(e) => {
+            setSerialNumber(e.target.value);
+            textToAscii(e.target.value);
+          }}
           className="mb-3 w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-
-        {/* <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mb-3 w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-        /> */}
 
         <input
           type="text"
@@ -133,20 +151,57 @@ const PhoneForm = ({ onUpload, onBack }) => {
 
         {url ? (
           <div>
-
-          <div>
-            <a
-              className="text-black"
-              href={`https://sepolia.etherscan.io/tx/${url}`}
-              target="_blank"
+            <div>
+              <a
+                className="text-purple-900"
+                href={`https://sepolia.etherscan.io/tx/${url}`}
+                target="_blank"
               >
-              Click on this to get redirected
-            </a>
-          </div>
-          <div className="text-black">
-          url
-          </div>
+                Click on this to get redirected
+              </a>
+            </div>
+            <div className="text-black">Serial number : {serialNumber}</div>
+            <div>
+              <div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Serial Number"
+                    value={serialNumber}
+                    disabled
+                    className="mb-3 w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="To:"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    className="mb-3 w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  onClick={handleTransaction}
+                  className="w-full px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-white font-medium mt-2"
+                >
+                  Transact
+                </button>
+
+                {newurl ? (
+                  <div>
+                    <div>
+                      <a
+                        className="text-purple-900"
+                        href={`https://sepolia.etherscan.io/tx/${newurl}`}
+                        target="_blank"
+                      >
+                        Click on this to get redirected
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
               </div>
+            </div>
+          </div>
         ) : (
           "NOt found"
         )}
