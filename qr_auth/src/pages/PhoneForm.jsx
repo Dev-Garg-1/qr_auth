@@ -133,14 +133,20 @@ const PhoneForm = ({ onUpload, onBack }) => {
 
         {url ? (
           <div>
+
+          <div>
             <a
               className="text-black"
               href={`https://sepolia.etherscan.io/tx/${url}`}
               target="_blank"
-            >
+              >
               Click on this to get redirected
             </a>
           </div>
+          <div className="text-black">
+          url
+          </div>
+              </div>
         ) : (
           "NOt found"
         )}
